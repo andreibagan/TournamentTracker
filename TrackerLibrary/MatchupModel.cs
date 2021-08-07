@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace TournamentTracker
+namespace TrackerLibrary
 {
     /// <summary>
     /// Represents one match int the tournament.

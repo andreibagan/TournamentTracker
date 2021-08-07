@@ -1,4 +1,4 @@
-﻿namespace TournamentTracker
+﻿namespace TrackerLibrary
 {
     /// <summary>
     /// Represents one team in a matchup.
