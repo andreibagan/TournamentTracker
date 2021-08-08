@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
 using TrackerLibrary;
+using TrackerLibrary.DataAccess;
+using TrackerLibrary.Models;
 
 namespace TrackerUI
 {
@@ -22,10 +24,7 @@ namespace TrackerUI
                     db.CreatePrize(model);
                 }
 
-                placeNumberValue.Text = String.Empty;
-                placeNameValue.Text = String.Empty;
-                prizeAmountValue.Text = "0";
-                prizePercentageValue.Text = "0";
+                ResetFrom();
             }
             else
             {
@@ -76,6 +75,14 @@ namespace TrackerUI
             }
 
             return output;
+        }
+
+        private void ResetFrom()
+        {
+            placeNumberValue.Text = String.Empty;
+            placeNameValue.Text = String.Empty;
+            prizeAmountValue.Text = "0";
+            prizePercentageValue.Text = "0";
         }
     }
 }

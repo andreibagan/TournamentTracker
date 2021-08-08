@@ -1,4 +1,4 @@
-﻿namespace TrackerLibrary
+﻿namespace TrackerLibrary.Models
 {
     /// <summary>
     /// Represents what the prize is for the given place.
@@ -39,7 +39,7 @@
         public PrizeModel(string placeNumber, string placeName, string prizeAmount, string prizePercentage)
         {
             int placeNumberValue = 0;
-            int.TryParse(placeName, out placeNumberValue);
+            int.TryParse(placeNumber, out placeNumberValue);
             PlaceNumber = placeNumberValue;
 
             PlaceName = placeName;
