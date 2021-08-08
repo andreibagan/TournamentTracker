@@ -30,5 +30,15 @@ namespace TrackerLibrary.DataAccess
         {
             return _db.LoadDate<PrizeModel, dynamic>("dbo.spPrizes_GetById", new { PrizeId }, connectionStringName, true).First();
         }
+
+        public void CreatePerson(PersonModel model)
+        {
+            _db.SaveData("dbo.spPeople_Insert", new { FirstName = model.FirstName, LastName = model.LastName, EmailAddress = model.EmailAddress, CellphoneNumber = model.CellphoneNumber }, connectionStringName, true);
+        }
+
+        public PersonModel GetPersonById(int PersonId)
+        {
+            return _db.LoadDate<PersonModel, dynamic>("dbo.spPeople_GetById", new { PersonId }, connectionStringName, true).First();
+        }
     }
 }
