@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using TrackerLibrary;
 using TrackerLibrary.DataAccess;
@@ -15,16 +10,33 @@ namespace TrackerUI
 {
     public partial class CreateTeamForm : Form
     {
+        private List<PersonModel> availableTeamMembers = GlobalConfig.Connection.GetAllPeople();
+        private List<PersonModel> selectedTeamMembers = new List<PersonModel>();
+
         public CreateTeamForm()
         {
             InitializeComponent();
+
+            WireUpLists();
+        }
+
+        private void WireUpLists()
+        {
+            selectTeamMemberDropDown.DataSource = null;
+            teamMembersListBox.DataSource = null;
+
+            selectTeamMemberDropDown.DataSource = availableTeamMembers;
+            selectTeamMemberDropDown.DisplayMember = "FullName";
+
+            teamMembersListBox.DataSource = selectedTeamMembers;
+            teamMembersListBox.DisplayMember = "FullName";
         }
 
         private void createMemberButton_Click(object sender, EventArgs e)
         {
             if (ValidateForm())
             {
-                PersonModel person = new PersonModel
+                PersonModel personModel = new PersonModel
                 {
                     FirstName = firstNameValue.Text,
                     LastName = lastNameValue.Text,
@@ -32,11 +44,13 @@ namespace TrackerUI
                     CellphoneNumber = cellPhoneValue.Text
                 };
 
-                foreach (IDataConnection db in GlobalConfig.Connections)
-                {
-                    db.CreatePerson(person);
-                }
+                GlobalConfig.Connection.CreatePerson(personModel);
 
+                var people = GlobalConfig.Connection.GetAllPeople();
+                var person = people.Find( p => p.Id == people.Max(m => m.Id));
+                selectedTeamMembers.Add(person); 
+
+                WireUpLists();
                 RefreshForm();
             }
             else
@@ -78,6 +92,63 @@ namespace TrackerUI
             }
 
             return output;
+        }
+
+        private bool ValidateTeam()
+        {
+            bool output = true;
+
+            if (String.IsNullOrWhiteSpace(teamNameValue.Text))
+            {
+                output = false;
+            }
+
+            return output;
+        }
+
+        private void addMemberButton_Click(object sender, EventArgs e)
+        {
+            PersonModel person = (PersonModel)selectTeamMemberDropDown.SelectedItem;
+
+            if (person != null)
+            {
+                availableTeamMembers.Remove(person);
+                selectedTeamMembers.Add(person);
+
+                WireUpLists();
+            }
+        }
+
+        private void deleteSelectedMemberButton_Click(object sender, EventArgs e)
+        {
+            PersonModel person = (PersonModel)teamMembersListBox.SelectedItem;
+
+            if (person != null)
+            {
+                selectedTeamMembers.Remove(person);
+                availableTeamMembers.Add(person);
+
+                WireUpLists();
+            }
+        }
+
+        private void createTeamButton_Click(object sender, EventArgs e)
+        {
+            if (ValidateTeam())
+            {
+                TeamModel team = new TeamModel();
+
+                team.TeamName = teamNameValue.Text;
+                team.TeamMembers = selectedTeamMembers;
+
+                GlobalConfig.Connection.CreateTeam(team);
+
+                // TODO - If we aren't closing this form after creation, reset the form.
+            }
+            else
+            {
+                MessageBox.Show("You need to fill in all of the fields.");
+            }
         }
     }
 }

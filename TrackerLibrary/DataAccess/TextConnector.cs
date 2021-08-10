@@ -10,6 +10,8 @@ namespace TrackerLibrary.DataAccess
         private readonly ITextFileDataAccess _db;
         private const string PrizesFileName = "PrizeModels.csv";
         private const string PeopleFileName = "PersonModels.csv";
+        private const string TeamsFileName = "TeamModels.csv";
+        private const string TeamMembersFileName = "TeamMemberModels.csv";
 
         public TextConnector(ITextFileDataAccess db)
         {
@@ -70,6 +72,62 @@ namespace TrackerLibrary.DataAccess
             person = people.Find(p => p.Id == PersonId);
 
             return person;
+        }
+
+        public List<PersonModel> GetAllPeople()
+        {
+            return _db.LoadFromTextFile<PersonModel>(PeopleFileName);
+        }
+
+        public void CreateTeam(TeamModel model)
+        {
+            List<TeamModel> teams = _db.LoadFromTextFile<TeamModel>(TeamsFileName);
+
+            int currentId = 1;
+
+            if (teams.Count > 0)
+            {
+                currentId = teams.Max(p => p.Id) + 1;
+            }
+
+            model.Id = currentId;
+
+            teams.Add(model);
+
+            _db.SaveToTextFile(teams, TeamsFileName);
+
+            foreach (var person in model.TeamMembers)
+            {
+                CreateTeamMember(new TeamMember { TeamId = model.Id, PersonId = person.Id });
+            }
+        }
+
+        public List<TeamModel> GetAllTeams()
+        {
+            return _db.LoadFromTextFile<TeamModel>(TeamsFileName);
+        }
+
+        public void CreateTeamMember(TeamMember model)
+        {
+            List<TeamMember> teamMembers = _db.LoadFromTextFile<TeamMember>(TeamMembersFileName);
+
+            int currentId = 1;
+
+            if (teamMembers.Count > 0)
+            {
+                currentId = teamMembers.Max(p => p.Id) + 1;
+            }
+
+            model.Id = currentId;
+
+            teamMembers.Add(model);
+
+            _db.SaveToTextFile(teamMembers, TeamMembersFileName);
+        }
+
+        public List<TeamMember> GetAllTeamMembers()
+        {
+            return _db.LoadFromTextFile<TeamMember>(TeamMembersFileName);
         }
     }
 }

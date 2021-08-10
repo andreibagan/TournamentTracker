@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using TournamentTracker.Attributes;
 using TrackerLibrary;
 
 namespace TournamentTracker.DataAccess
@@ -21,7 +23,7 @@ namespace TournamentTracker.DataAccess
             var lines = File.ReadAllLines(filePath).ToList();
             List<T> output = new List<T>();
             T entry = new T();
-            var cols = entry.GetType().GetProperties();
+            var cols = entry.GetType().GetProperties().Where(p => p.CanWrite && !p.IsDefined(typeof(ListDefinedAttribute), false));
 
             if (lines.Count < 2)
             {
@@ -65,7 +67,7 @@ namespace TournamentTracker.DataAccess
                 throw new ArgumentException(nameof(data), "The data was either empty or null");
             }
 
-            var cols = data[0].GetType().GetProperties();
+            var cols = data[0].GetType().GetProperties().Where(p => !p.IsDefined(typeof(ListDefinedAttribute), false));
 
             foreach (var col in cols)
             {

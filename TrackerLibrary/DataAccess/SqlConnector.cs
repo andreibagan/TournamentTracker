@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using TournamentTracker.DataAccess;
@@ -39,6 +40,38 @@ namespace TrackerLibrary.DataAccess
         public PersonModel GetPersonById(int PersonId)
         {
             return _db.LoadDate<PersonModel, dynamic>("dbo.spPeople_GetById", new { PersonId }, connectionStringName, true).First();
+        }
+
+        public List<PersonModel> GetAllPeople()
+        {
+            return _db.LoadDate<PersonModel, dynamic>("dbo.spPeople_GetAll", new { }, connectionStringName, true);
+        }
+
+        public void CreateTeam(TeamModel model)
+        {
+            _db.SaveData("dbo.spTeams_Insert", new { TeamName = model.TeamName }, connectionStringName, true);
+            var teams = GetAllTeams();
+            var team = teams.Find(t => t.Id == teams.Max(tm => tm.Id));
+
+            foreach (PersonModel person in model.TeamMembers)
+            {
+                CreateTeamMember(new TeamMember { TeamId = team.Id, PersonId = person.Id });
+            }
+        }
+
+        public List<TeamModel> GetAllTeams()
+        {
+            return _db.LoadDate<TeamModel, dynamic>("dbo.spTeams_GetAll", new { }, connectionStringName, true);
+        }
+
+        public void CreateTeamMember(TeamMember model)
+        {
+            _db.SaveData("dbo.spTeamMembers_Insert", model, connectionStringName, true);
+        }
+
+        public List<TeamMember> GetAllTeamMembers()
+        {
+            return _db.LoadDate<TeamMember, dynamic>("dbo.spTeamMembers_GetAll", new { }, connectionStringName, true);
         }
     }
 }

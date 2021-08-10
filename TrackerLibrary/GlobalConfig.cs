@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using TournamentTracker;
 using TournamentTracker.DataAccess;
 using TrackerLibrary.DataAccess;
 
@@ -8,21 +9,19 @@ namespace TrackerLibrary
 {
     public static class GlobalConfig
     {
-        public static List<IDataConnection> Connections { get; private set; } = new List<IDataConnection>();
-        private static ISqlDataAccess _db = new SqlDataAccess();
+        public static IDataConnection Connection { get; private set; }
+        private static ISqlDataAccess _sqlDataAccess = new SqlDataAccess();
+        private static ITextFileDataAccess _textDataAccess = new TextFileDataAccess();
 
-        public static void InitializeConnections(bool database, bool textFiles)
+        public static void InitializeConnections(DataAccessType dataAccessType)
         {
-            if (database)
+            if (dataAccessType == DataAccessType.SqlAccess)
             {
-                SqlConnector sql = new SqlConnector(_db);
-                Connections.Add(sql);
+                Connection = new SqlConnector(_sqlDataAccess);
             }
-
-            if (textFiles)
+            else if (dataAccessType == DataAccessType.FileAccess)
             {
-                TextConnector text = new TextConnector(new TextFileDataAccess());
-                Connections.Add(text);
+                Connection = new TextConnector(_textDataAccess);
             }
         }
 
