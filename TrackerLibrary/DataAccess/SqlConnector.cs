@@ -1,8 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
 using System.Linq;
-using TournamentTracker.DataAccess;
 using TrackerLibrary.Models;
 
 namespace TrackerLibrary.DataAccess
@@ -22,22 +19,24 @@ namespace TrackerLibrary.DataAccess
         /// </summary>
         /// <param name="model">The prize information.</param>
         /// <returns>The prize information, including the unique identifier.</returns>
-        public void CreatePrize(PrizeModel model)
+        public PrizeModel CreatePrize(PrizeModel model)
         {
-            _db.SaveData("dbo.spPrizes_Insert", model, connectionStringName, true);
+            model.Id = _db.LoadDate<int, dynamic>("dbo.spPrizes_Insert", new { model.PlaceNumber, model.PlaceName, model.PrizeAmount, model.PrizePercentage }, connectionStringName, true).First();
+            return model;
         }
 
-        public PrizeModel GetPrizeById(int PrizeId)
+        private PrizeModel GetPrizeById(int PrizeId)
         {
             return _db.LoadDate<PrizeModel, dynamic>("dbo.spPrizes_GetById", new { PrizeId }, connectionStringName, true).First();
         }
 
-        public void CreatePerson(PersonModel model)
+        public PersonModel CreatePerson(PersonModel model)
         {
-            _db.SaveData("dbo.spPeople_Insert", new { FirstName = model.FirstName, LastName = model.LastName, EmailAddress = model.EmailAddress, CellphoneNumber = model.CellphoneNumber }, connectionStringName, true);
+            model.Id = _db.LoadDate<int, dynamic>("dbo.spPeople_Insert", new { model.FirstName, model.LastName, model.EmailAddress, model.CellphoneNumber }, connectionStringName, true).First();
+            return model;
         }
 
-        public PersonModel GetPersonById(int PersonId)
+        private PersonModel GetPersonById(int PersonId)
         {
             return _db.LoadDate<PersonModel, dynamic>("dbo.spPeople_GetById", new { PersonId }, connectionStringName, true).First();
         }
@@ -47,31 +46,68 @@ namespace TrackerLibrary.DataAccess
             return _db.LoadDate<PersonModel, dynamic>("dbo.spPeople_GetAll", new { }, connectionStringName, true);
         }
 
-        public void CreateTeam(TeamModel model)
+        public TeamModel CreateTeam(TeamModel model)
         {
-            _db.SaveData("dbo.spTeams_Insert", new { TeamName = model.TeamName }, connectionStringName, true);
-            var teams = GetAllTeams();
-            var team = teams.Find(t => t.Id == teams.Max(tm => tm.Id));
+            model.Id = _db.LoadDate<int, dynamic>("dbo.spTeams_Insert", new { model.TeamName }, connectionStringName, true).First();
 
             foreach (PersonModel person in model.TeamMembers)
             {
-                CreateTeamMember(new TeamMember { TeamId = team.Id, PersonId = person.Id });
+                CreateTeamMember(new TeamMember { TeamId = model.Id, PersonId = person.Id });
             }
+
+            return model;
         }
 
         public List<TeamModel> GetAllTeams()
         {
-            return _db.LoadDate<TeamModel, dynamic>("dbo.spTeams_GetAll", new { }, connectionStringName, true);
+            var output = _db.LoadDate<TeamModel, dynamic>("dbo.spTeams_GetAll", new { }, connectionStringName, true);
+
+            foreach (var team in output)
+            {
+                team.TeamMembers = _db.LoadDate<PersonModel, dynamic>("dbo.spTeamMembers_GetByTeam", new { TeamId = team.Id }, connectionStringName, true);
+            }
+
+            return output;
         }
 
-        public void CreateTeamMember(TeamMember model)
+        private TeamMember CreateTeamMember(TeamMember model)
         {
-            _db.SaveData("dbo.spTeamMembers_Insert", model, connectionStringName, true);
+            model.Id = _db.LoadDate<int, dynamic>("dbo.spTeamMembers_Insert", new { model.TeamId, model.PersonId }, connectionStringName, true).First();
+            return model;
         }
 
-        public List<TeamMember> GetAllTeamMembers()
+        private List<TeamMember> GetAllTeamMembers()
         {
             return _db.LoadDate<TeamMember, dynamic>("dbo.spTeamMembers_GetAll", new { }, connectionStringName, true);
+        }
+
+        private TournamentPrizeModel CreateTournamentPrize(TournamentPrizeModel model)
+        {
+            model.Id = _db.LoadDate<int, dynamic>("dbo.spTournamentPrizes_Insert", new { model.PrizeId, model.TournamentId }, connectionStringName, true).First();
+            return model;
+        }
+
+        private TournamentEntryModel CreateTournamentEntry(TournamentEntryModel model)
+        {
+            model.Id = _db.LoadDate<int, dynamic>("dbo.spTournamentEntries_Insert", new { model.TeamId, model.TournamentId }, connectionStringName, true).First();
+            return model;
+        }
+
+        public TournamentModel CreateTournament(TournamentModel model)
+        {
+            model.Id = _db.LoadDate<int, dynamic>("dbo.spTournaments_Insert", new { model.TournamentName, model.EntryFee }, connectionStringName, true).First();
+
+            foreach (var prize in model.Prizes)
+            {
+                CreateTournamentPrize(new TournamentPrizeModel { PrizeId = prize.Id, TournamentId = model.Id });
+            }
+
+            foreach (var team in model.EnteredTeams)
+            {
+                CreateTournamentEntry(new TournamentEntryModel { TeamId = team.Id, TournamentId = model.Id });
+            }
+
+            return model;
         }
     }
 }

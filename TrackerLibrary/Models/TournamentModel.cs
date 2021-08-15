@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using TournamentTracker.Attributes;
 
 namespace TrackerLibrary.Models
 {
@@ -7,6 +8,10 @@ namespace TrackerLibrary.Models
     /// </summary>
     public class TournamentModel
     {
+        /// <summary>
+        /// The unique identifier for the prize.
+        /// </summary>
+        public int Id { get; set; }
         /// <summary>
         /// The name given to this tournament.
         /// </summary>
@@ -20,16 +25,19 @@ namespace TrackerLibrary.Models
         /// <summary>
         /// The set of teams that have been entered.
         /// </summary>
+        [ListDefined]
         public List<TeamModel> EnteredTeams { get; set; } = new List<TeamModel>();
 
         /// <summary>
         /// The list of prizes for the various places.
         /// </summary>
+        [ListDefined]
         public List<PrizeModel> Prizes { get; set; } = new List<PrizeModel>();
 
         /// <summary>
         /// the matchups per round.
         /// </summary>
+        [ListDefined]
         public List<List<MatchupModel>> Rounds { get; set; } = new List<List<MatchupModel>>();
     }
 }

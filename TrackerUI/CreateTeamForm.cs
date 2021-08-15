@@ -10,14 +10,16 @@ namespace TrackerUI
 {
     public partial class CreateTeamForm : Form
     {
-        private List<PersonModel> availableTeamMembers = GlobalConfig.Connection.GetAllPeople();
-        private List<PersonModel> selectedTeamMembers = new List<PersonModel>();
+        private readonly List<PersonModel> availableTeamMembers = GlobalConfig.Connection.GetAllPeople();
+        private readonly List<PersonModel> selectedTeamMembers = new List<PersonModel>();
+        private readonly ITeamRequester _teamRequester;
 
-        public CreateTeamForm()
+        public CreateTeamForm(ITeamRequester teamRequester)
         {
             InitializeComponent();
 
             WireUpLists();
+            _teamRequester = teamRequester;
         }
 
         private void WireUpLists()
@@ -44,14 +46,12 @@ namespace TrackerUI
                     CellphoneNumber = cellPhoneValue.Text
                 };
 
-                GlobalConfig.Connection.CreatePerson(personModel);
+                PersonModel person = GlobalConfig.Connection.CreatePerson(personModel);
 
-                var people = GlobalConfig.Connection.GetAllPeople();
-                var person = people.Find( p => p.Id == people.Max(m => m.Id));
                 selectedTeamMembers.Add(person); 
 
                 WireUpLists();
-                RefreshForm();
+                ResetForm();
             }
             else
             {
@@ -59,7 +59,7 @@ namespace TrackerUI
             }
         }
 
-        private void RefreshForm()
+        private void ResetForm()
         {
             firstNameValue.Text = String.Empty;
             lastNameValue.Text = String.Empty;
@@ -119,7 +119,7 @@ namespace TrackerUI
             }
         }
 
-        private void deleteSelectedMemberButton_Click(object sender, EventArgs e)
+        private void removeSelectedMemberButton_Click(object sender, EventArgs e)
         {
             PersonModel person = (PersonModel)teamMembersListBox.SelectedItem;
 
@@ -143,7 +143,9 @@ namespace TrackerUI
 
                 GlobalConfig.Connection.CreateTeam(team);
 
-                // TODO - If we aren't closing this form after creation, reset the form.
+                _teamRequester.TeamComplete(team);
+
+                Close();
             }
             else
             {

@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Configuration;
+﻿using System.Configuration;
 using System.IO;
 using TournamentTracker;
-using TournamentTracker.DataAccess;
 using TrackerLibrary.DataAccess;
 
 namespace TrackerLibrary

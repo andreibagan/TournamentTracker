@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace TournamentTracker.DataAccess
+namespace TrackerLibrary.DataAccess
 {
     public interface ISqlDataAccess
     {

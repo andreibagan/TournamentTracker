@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using TournamentTracker.DataAccess;
 using TrackerLibrary.Models;
 
 namespace TrackerLibrary.DataAccess
@@ -12,13 +11,16 @@ namespace TrackerLibrary.DataAccess
         private const string PeopleFileName = "PersonModels.csv";
         private const string TeamsFileName = "TeamModels.csv";
         private const string TeamMembersFileName = "TeamMemberModels.csv";
+        private const string TournamentPrizesFileName = "TournamentPrizeModels.csv";
+        private const string TournamentEntriesFileName = "TournamentEntryModels.csv";
+        private const string TournamentsFileName = "TournamentModels.csv";
 
         public TextConnector(ITextFileDataAccess db)
         {
             _db = db;
         }
 
-        public void CreatePrize(PrizeModel model)
+        public PrizeModel CreatePrize(PrizeModel model)
         {
             List<PrizeModel> prizes = _db.LoadFromTextFile<PrizeModel>(PrizesFileName);
 
@@ -34,6 +36,8 @@ namespace TrackerLibrary.DataAccess
             prizes.Add(model);
 
             _db.SaveToTextFile(prizes, PrizesFileName);
+
+            return model;
         }
 
         public PrizeModel GetPrizeById(int PrizeId)
@@ -46,9 +50,9 @@ namespace TrackerLibrary.DataAccess
             return prize;
         }
 
-        public void CreatePerson(PersonModel model)
+        public PersonModel CreatePerson(PersonModel model)
         {
-            List<PersonModel> people = _db.LoadFromTextFile<PersonModel>(PeopleFileName);
+            List<PersonModel> people = GetAllPeople();
 
             int currentId = 1;
 
@@ -62,12 +66,14 @@ namespace TrackerLibrary.DataAccess
             people.Add(model);
 
             _db.SaveToTextFile(people, PeopleFileName);
+
+            return model;
         }
 
         public PersonModel GetPersonById(int PersonId)
         {
             PersonModel person;
-            List<PersonModel> people = _db.LoadFromTextFile<PersonModel>(PeopleFileName);
+            List<PersonModel> people = GetAllPeople();
 
             person = people.Find(p => p.Id == PersonId);
 
@@ -79,7 +85,7 @@ namespace TrackerLibrary.DataAccess
             return _db.LoadFromTextFile<PersonModel>(PeopleFileName);
         }
 
-        public void CreateTeam(TeamModel model)
+        public TeamModel CreateTeam(TeamModel model)
         {
             List<TeamModel> teams = _db.LoadFromTextFile<TeamModel>(TeamsFileName);
 
@@ -100,16 +106,27 @@ namespace TrackerLibrary.DataAccess
             {
                 CreateTeamMember(new TeamMember { TeamId = model.Id, PersonId = person.Id });
             }
+
+            return model;
         }
 
         public List<TeamModel> GetAllTeams()
         {
-            return _db.LoadFromTextFile<TeamModel>(TeamsFileName);
+            var output = _db.LoadFromTextFile<TeamModel>(TeamsFileName);
+            var teamMembers = GetAllTeamMembers();
+            var people = GetAllPeople();
+
+            foreach (var team in output)
+            {
+                team.TeamMembers = people.Where(p => teamMembers.Where(t => t.TeamId == team.Id).Select(t => t.PersonId).Contains(p.Id)).ToList();
+            }
+
+            return output;
         }
 
-        public void CreateTeamMember(TeamMember model)
+        public TeamMember CreateTeamMember(TeamMember model)
         {
-            List<TeamMember> teamMembers = _db.LoadFromTextFile<TeamMember>(TeamMembersFileName);
+            List<TeamMember> teamMembers = GetAllTeamMembers();
 
             int currentId = 1;
 
@@ -123,11 +140,98 @@ namespace TrackerLibrary.DataAccess
             teamMembers.Add(model);
 
             _db.SaveToTextFile(teamMembers, TeamMembersFileName);
+
+            return model;
         }
 
         public List<TeamMember> GetAllTeamMembers()
         {
             return _db.LoadFromTextFile<TeamMember>(TeamMembersFileName);
+        }
+
+        public TournamentPrizeModel CreateTournamentPrize(TournamentPrizeModel model)
+        {
+            List<TournamentPrizeModel> tournamentPrizes = GetAllTournamentPrizes();
+
+            int currentId = 1;
+
+            if (tournamentPrizes.Count > 0)
+            {
+                currentId = tournamentPrizes.Max(p => p.Id) + 1;
+            }
+
+            model.Id = currentId;
+
+            tournamentPrizes.Add(model);
+
+            _db.SaveToTextFile(tournamentPrizes, TournamentPrizesFileName);
+
+            return model;
+        }
+
+        public List<TournamentPrizeModel> GetAllTournamentPrizes()
+        {
+            return _db.LoadFromTextFile<TournamentPrizeModel>(TournamentPrizesFileName);
+        }
+
+        public TournamentEntryModel CreateTournamentEntry(TournamentEntryModel model)
+        {
+            List<TournamentEntryModel> tournamentEntries = GetAllTournamentEntries();
+
+            int currentId = 1;
+
+            if (tournamentEntries.Count > 0)
+            {
+                currentId = tournamentEntries.Max(p => p.Id) + 1;
+            }
+
+            model.Id = currentId;
+
+            tournamentEntries.Add(model);
+
+            _db.SaveToTextFile(tournamentEntries, TournamentEntriesFileName);
+
+            return model;
+        }
+
+        public List<TournamentEntryModel> GetAllTournamentEntries()
+        {
+            return _db.LoadFromTextFile<TournamentEntryModel>(TournamentEntriesFileName);
+        }
+
+        public TournamentModel CreateTournament(TournamentModel model)
+        {
+            List<TournamentModel> tournaments = GetAllTournaments();
+
+            int currentId = 1;
+
+            if (tournaments.Count > 0)
+            {
+                currentId = tournaments.Max(p => p.Id) + 1;
+            }
+
+            model.Id = currentId;
+
+            tournaments.Add(model);
+
+            _db.SaveToTextFile(tournaments, TournamentsFileName);
+
+            foreach (var prize in model.Prizes)
+            {
+                CreateTournamentPrize(new TournamentPrizeModel { PrizeId = prize.Id, TournamentId = model.Id });
+            }
+
+            foreach (var team in model.EnteredTeams)
+            {
+                CreateTournamentEntry(new TournamentEntryModel { TeamId = team.Id, TournamentId = model.Id });
+            }
+
+            return model;
+        }
+
+        public List<TournamentModel> GetAllTournaments()
+        {
+            return _db.LoadFromTextFile<TournamentModel>(TournamentsFileName);
         }
     }
 }

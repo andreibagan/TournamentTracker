@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using TournamentTracker.Attributes;
-using TrackerLibrary;
 
-namespace TournamentTracker.DataAccess
+namespace TrackerLibrary.DataAccess
 {
     public class TextFileDataAccess : ITextFileDataAccess
     {

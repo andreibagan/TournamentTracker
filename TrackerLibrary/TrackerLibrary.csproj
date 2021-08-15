@@ -68,6 +68,8 @@
     <Compile Include="DataAccess\ISqlDataAccess.cs" />
     <Compile Include="DataAccess\ITextFileDataAccess.cs" />
     <Compile Include="DataAccess\SqlDataAccess.cs" />
+    <Compile Include="Models\TournamentEntryModel.cs" />
+    <Compile Include="Models\TournamentPrizeModel.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="GlobalConfig.cs" />
     <Compile Include="DataAccess\IDataConnection.cs" />
@@ -82,6 +84,7 @@
     <Compile Include="Models\TeamModel.cs" />
     <Compile Include="DataAccess\TextConnector.cs" />
     <Compile Include="Models\TournamentModel.cs" />
+    <Compile Include="TournamentLogic.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

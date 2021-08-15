@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using TrackerLibrary;
 
-namespace TournamentTracker.DataAccess
+namespace TrackerLibrary.DataAccess
 {
     public class SqlDataAccess : ISqlDataAccess
     {
