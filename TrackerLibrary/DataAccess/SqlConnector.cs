@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using TrackerLibrary.Models;
 
@@ -93,9 +94,21 @@ namespace TrackerLibrary.DataAccess
             return model;
         }
 
-        public TournamentModel CreateTournament(TournamentModel model)
+        private MatchupModel CreateMatchup(MatchupModel model, int tournamentId)
         {
-            model.Id = _db.LoadDate<int, dynamic>("dbo.spTournaments_Insert", new { model.TournamentName, model.EntryFee }, connectionStringName, true).First();
+            model.Id = _db.LoadDate<int, dynamic>("dbo.spMatchups_Insert", new { model.MatchupRound, TournamentId = tournamentId }, connectionStringName, true).First();
+
+            foreach (var entry in model.Entries)
+            {
+                entry.Id = _db.LoadDate<int, dynamic>("dbo.spMatchupEntries_Insert", new { MatchupId = model.Id, ParentMatchupId = entry.ParentMatchup?.Id, TeamCompetingId = entry.TeamCompeting?.Id }, connectionStringName, true).First();
+            }
+            
+            return model;
+        }
+
+        public void CreateTournament(TournamentModel model)
+        {
+            model.Id = _db.LoadDate<int, dynamic>("dbo.spTournaments_Insert", new { model.TournamentName, model.EntryFee}, connectionStringName, true).First();
 
             foreach (var prize in model.Prizes)
             {
@@ -107,7 +120,13 @@ namespace TrackerLibrary.DataAccess
                 CreateTournamentEntry(new TournamentEntryModel { TeamId = team.Id, TournamentId = model.Id });
             }
 
-            return model;
+            foreach (var round in model.Rounds)
+            {
+                foreach (var matchup in round)
+                {
+                    CreateMatchup(matchup, model.Id);
+                }
+            }
         }
     }
 }

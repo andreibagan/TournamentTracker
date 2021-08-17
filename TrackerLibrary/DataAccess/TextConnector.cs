@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using TrackerLibrary.Models;
 
@@ -14,6 +15,8 @@ namespace TrackerLibrary.DataAccess
         private const string TournamentPrizesFileName = "TournamentPrizeModels.csv";
         private const string TournamentEntriesFileName = "TournamentEntryModels.csv";
         private const string TournamentsFileName = "TournamentModels.csv";
+        private const string MatchupsFileName = "MatchupModels.csv";
+        private const string MatchupEntriesFileName = "MatchupEntryModels.csv";
 
         public TextConnector(ITextFileDataAccess db)
         {
@@ -199,7 +202,64 @@ namespace TrackerLibrary.DataAccess
             return _db.LoadFromTextFile<TournamentEntryModel>(TournamentEntriesFileName);
         }
 
-        public TournamentModel CreateTournament(TournamentModel model)
+        private MatchupEntryModel CreateMatchupEntry(MatchupEntryModel model)
+        {
+            List<MatchupEntryModel> matchupEntries = GetAllMatchupEntries();
+
+            int currentId = 1;
+
+            if (matchupEntries.Count > 0)
+            {
+                currentId = matchupEntries.Max(p => p.Id) + 1;
+            }
+
+            model.Id = currentId;
+
+            matchupEntries.Add(model);
+
+            _db.SaveToTextFile(matchupEntries, MatchupEntriesFileName);
+
+            return model;
+        }
+
+        private List<MatchupEntryModel> GetAllMatchupEntries()
+        {
+            return _db.LoadFromTextFile<MatchupEntryModel>(MatchupEntriesFileName);
+        }
+
+        private MatchupModel CreateMatchup(MatchupModel model, int tournamentId)
+        {
+            List<MatchupModel> matchups = GetAllMatchups();
+
+            int currentId = 1;
+
+            if (matchups.Count > 0)
+            {
+                currentId = matchups.Max(p => p.Id) + 1;
+            }
+
+            model.Id = currentId;
+            //model.Winner = new TeamModel { Id = 1, TeamName = "king" }; 
+            // TODO: Remove it
+
+            matchups.Add(model);
+
+            _db.SaveToTextFile(matchups, MatchupsFileName);
+
+            foreach (var entry in model.Entries)
+            {
+                entry.Id = CreateMatchupEntry(entry).Id;
+            }
+
+            return model;
+        }
+
+        private List<MatchupModel> GetAllMatchups()
+        {
+            return _db.LoadFromTextFile<MatchupModel>(MatchupsFileName);
+        }
+
+        public void CreateTournament(TournamentModel model)
         {
             List<TournamentModel> tournaments = GetAllTournaments();
 
@@ -226,7 +286,13 @@ namespace TrackerLibrary.DataAccess
                 CreateTournamentEntry(new TournamentEntryModel { TeamId = team.Id, TournamentId = model.Id });
             }
 
-            return model;
+            foreach (var round in model.Rounds)
+            {
+                foreach (var match in round)
+                {
+                    CreateMatchup(match, model.Id);
+                }
+            }
         }
 
         public List<TournamentModel> GetAllTournaments()

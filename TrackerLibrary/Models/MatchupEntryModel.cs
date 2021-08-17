@@ -1,4 +1,6 @@
-﻿namespace TrackerLibrary.Models
+﻿using TournamentTracker.Attributes;
+
+namespace TrackerLibrary.Models
 {
     /// <summary>
     /// Represents one team in a matchup.
@@ -6,8 +8,13 @@
     public class MatchupEntryModel
     {
         /// <summary>
+        /// The unique identifier for the matchup entry.
+        /// </summary>
+        public int Id { get; set; }
+        /// <summary>
         /// Represents one team in the matchup.
         /// </summary>
+        [Property("Id")]
         public TeamModel TeamCompeting { get; set; }
 
         /// <summary>
@@ -18,6 +25,7 @@
         /// <summary>
         /// Represents the matchup that this team came from as the winner.
         /// </summary>
+        [Property("Id")]
         public MatchupModel ParentMatchup { get; set; }
     }
 }

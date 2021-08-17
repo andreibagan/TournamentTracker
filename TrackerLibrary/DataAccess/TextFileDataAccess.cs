@@ -19,9 +19,10 @@ namespace TrackerLibrary.DataAccess
             }
 
             var lines = File.ReadAllLines(filePath).ToList();
+
             List<T> output = new List<T>();
             T entry = new T();
-            var cols = entry.GetType().GetProperties().Where(p => p.CanWrite && !p.IsDefined(typeof(ListDefinedAttribute), false));
+            var cols = entry.GetType().GetProperties().Where(p => p.CanWrite && !p.IsDefined(typeof(ListDefinedAttribute), false)).ToList();
 
             if (lines.Count < 2)
             {
@@ -43,7 +44,34 @@ namespace TrackerLibrary.DataAccess
                     {
                         if (col.Name == headers[i])
                         {
-                            col.SetValue(entry, Convert.ChangeType(vals[i], col.PropertyType));
+                            if (!col.IsDefined(typeof(PropertyAttribute), false) && vals[i] != "null")
+                            {
+                                col.SetValue(entry, Convert.ChangeType(vals[i], col.PropertyType));
+                                break;
+                            }
+                            else
+                            if (vals[i] == "null")
+                            {
+                                col.SetValue(entry, Convert.ChangeType(null, col.PropertyType));
+                                break;
+                            }
+                            else
+                            if (col.IsDefined(typeof(PropertyAttribute), false))
+                            {
+                                var propertyAttribute = (PropertyAttribute)col.GetCustomAttributes(typeof(PropertyAttribute), false).First();
+                                var propertyInfo = col.PropertyType.GetProperty(propertyAttribute.PropertyName);
+
+                                if (propertyInfo == null)
+                                {
+                                    throw new NullReferenceException("Invalid attribute property name.");
+                                }
+
+                                var valueInstance = Activator.CreateInstance(col.PropertyType);
+                                propertyInfo.SetValue(valueInstance, Convert.ChangeType(vals[i], propertyInfo.PropertyType));
+
+                                col.SetValue(entry, Convert.ChangeType(valueInstance, col.PropertyType));
+                                break;
+                            }
                         }
                     }
                 }
@@ -65,7 +93,7 @@ namespace TrackerLibrary.DataAccess
                 throw new ArgumentException(nameof(data), "The data was either empty or null");
             }
 
-            var cols = data[0].GetType().GetProperties().Where(p => !p.IsDefined(typeof(ListDefinedAttribute), false));
+            var cols = data[0].GetType().GetProperties().Where(p => !p.IsDefined(typeof(ListDefinedAttribute), false)).ToList();
 
             foreach (var col in cols)
             {
@@ -81,7 +109,33 @@ namespace TrackerLibrary.DataAccess
 
                 foreach (var col in cols)
                 {
-                    line.Append(col.GetValue(row));
+                    if (col.IsDefined(typeof(PropertyAttribute), false))
+                    {
+                        var property = (PropertyAttribute)col.GetCustomAttributes(typeof(PropertyAttribute), false).First();
+
+                        var propertyInfo = col.PropertyType.GetProperty(property.PropertyName);
+
+                        if (propertyInfo == null)
+                        {
+                            throw new NullReferenceException("Invalid attribute property name.");
+                        }
+
+                        var propertyValue = col.GetValue(row);
+
+                        if (propertyValue != null)
+                        {
+                            line.Append(propertyInfo.GetValue(propertyValue));
+                        }
+                        else
+                        {
+                            line.Append("null");
+                        }
+                    }
+                    else
+                    {
+                        line.Append(col.GetValue(row));
+                    }
+
                     line.Append(",");
                 }
 

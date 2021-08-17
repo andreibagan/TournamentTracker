@@ -22,6 +22,6 @@ namespace TrackerLibrary.DataAccess
 
         //TournamentEntryModel CreateTournamentEntry(TournamentEntryModel model);
 
-        TournamentModel CreateTournament(TournamentModel model);
+        void CreateTournament(TournamentModel model);
     }
 }
