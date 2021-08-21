@@ -25,19 +25,19 @@ namespace TrackerLibrary.Models
         /// <summary>
         /// The set of teams that have been entered.
         /// </summary>
-        [ListDefined]
+        [RemoveProperty]
         public List<TeamModel> EnteredTeams { get; set; } = new List<TeamModel>();
 
         /// <summary>
         /// The list of prizes for the various places.
         /// </summary>
-        [ListDefined]
+        [RemoveProperty]
         public List<PrizeModel> Prizes { get; set; } = new List<PrizeModel>();
 
         /// <summary>
         /// the matchups per round.
         /// </summary>
-        [ListDefined]
+        [RemoveProperty]
         public List<List<MatchupModel>> Rounds { get; set; } = new List<List<MatchupModel>>();
     }
 }

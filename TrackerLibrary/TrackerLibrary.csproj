@@ -64,7 +64,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Attributes\ListDefinedAttribute.cs" />
+    <Compile Include="Attributes\RemovePropertyAttribute.cs" />
     <Compile Include="Attributes\PropertyAttribute.cs" />
     <Compile Include="DataAccess\ISqlDataAccess.cs" />
     <Compile Include="DataAccess\ITextFileDataAccess.cs" />

@@ -214,6 +214,7 @@ namespace TrackerLibrary.DataAccess
             }
 
             model.Id = currentId;
+            model.ParentMatchupId = model.ParentMatchup != null ? model.ParentMatchup.Id : 0;
 
             matchupEntries.Add(model);
 
@@ -239,8 +240,6 @@ namespace TrackerLibrary.DataAccess
             }
 
             model.Id = currentId;
-            //model.Winner = new TeamModel { Id = 1, TeamName = "king" }; 
-            // TODO: Remove it
 
             matchups.Add(model);
 
@@ -248,7 +247,7 @@ namespace TrackerLibrary.DataAccess
 
             foreach (var entry in model.Entries)
             {
-                entry.Id = CreateMatchupEntry(entry).Id;
+                CreateMatchupEntry(entry);
             }
 
             return model;

@@ -54,7 +54,7 @@ namespace TournamentTracker
 
             foreach (TeamModel team in teams)
             {
-                curr.Entries.Add(new MatchupEntryModel { TeamCompeting = team });
+                curr.Entries.Add(new MatchupEntryModel { TeamCompetingId = team.Id, TeamCompeting = team });
 
                 if (byes > 0 || curr.Entries.Count > 1)
                 {

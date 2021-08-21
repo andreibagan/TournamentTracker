@@ -22,7 +22,7 @@ namespace TrackerLibrary.DataAccess
 
             List<T> output = new List<T>();
             T entry = new T();
-            var cols = entry.GetType().GetProperties().Where(p => p.CanWrite && !p.IsDefined(typeof(ListDefinedAttribute), false)).ToList();
+            var cols = entry.GetType().GetProperties().Where(p => p.CanWrite && !p.IsDefined(typeof(RemovePropertyAttribute), false)).ToList();
 
             if (lines.Count < 2)
             {
@@ -93,7 +93,7 @@ namespace TrackerLibrary.DataAccess
                 throw new ArgumentException(nameof(data), "The data was either empty or null");
             }
 
-            var cols = data[0].GetType().GetProperties().Where(p => !p.IsDefined(typeof(ListDefinedAttribute), false)).ToList();
+            var cols = data[0].GetType().GetProperties().Where(p => !p.IsDefined(typeof(RemovePropertyAttribute), false)).ToList();
 
             foreach (var col in cols)
             {

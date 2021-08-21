@@ -128,5 +128,69 @@ namespace TrackerLibrary.DataAccess
                 }
             }
         }
+
+        public List<TournamentModel> GetAllTournaments()
+        {
+            List<TournamentModel> output;
+
+            output = _db.LoadDate<TournamentModel, dynamic>("dbo.spTournaments_GetAll", new { }, connectionStringName, true);
+
+            foreach (TournamentModel tournament in output)
+            {
+                tournament.Prizes = _db.LoadDate<PrizeModel, dynamic>("dbo.spPrizes_GetByTournament", new { TournamentId = tournament.Id }, connectionStringName, true);
+                tournament.EnteredTeams = _db.LoadDate<TeamModel, dynamic>("dbo.spTeams_GetByTournament", new { TournamentId = tournament.Id }, connectionStringName, true);
+
+                foreach (var team in tournament.EnteredTeams)
+                {
+                    team.TeamMembers = _db.LoadDate<PersonModel, dynamic>("dbo.spTeamMembers_GetByTeam", new { TeamId = team.Id }, connectionStringName, true);
+                }
+
+                List<MatchupModel> matchups = _db.LoadDate<MatchupModel, dynamic>("dbo.spMatchups_GetByTournament", new { TournamentId = tournament.Id }, connectionStringName, true);
+
+                foreach (var matchup in matchups)
+                {
+                    matchup.Entries = _db.LoadDate<MatchupEntryModel, dynamic>("dbo.spMatchupEntries_GetByMatchup", new { MatchupId = matchup.Id }, connectionStringName, true);
+
+                    List<TeamModel> teams = GetAllTeams();
+
+                    if (matchup.WinnerId > 0)
+                    {
+                        matchup.Winner = teams.Where(x => x.Id == matchup.WinnerId).First();
+                    }
+
+                    foreach (var entry in matchup.Entries)
+                    {
+                        if (entry.TeamCompetingId > 0)
+                        {
+                            entry.TeamCompeting = teams.Where(x => x.Id == entry.TeamCompetingId).First();
+                        }
+
+                        if (entry.ParentMatchupId > 0)
+                        {
+                            entry.ParentMatchup = matchups.Where(x => x.Id == entry.ParentMatchupId).First();
+                        }
+                    }
+                }
+
+                List<MatchupModel> currRow = new List<MatchupModel>();
+                int currRound = 1;
+
+                foreach (MatchupModel matchupModel in matchups)
+                {
+                    if (matchupModel.MatchupRound > currRound)
+                    {
+                        tournament.Rounds.Add(currRow);
+                        currRow = new List<MatchupModel>();
+                        currRound++;
+                    }
+
+                    currRow.Add(matchupModel);
+                }
+
+                tournament.Rounds.Add(currRow);
+            }
+
+            return output;
+        }
     }
 }
