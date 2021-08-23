@@ -43,7 +43,7 @@ namespace TrackerLibrary.DataAccess
             return model;
         }
 
-        public PrizeModel GetPrizeById(int PrizeId)
+        private PrizeModel GetPrizeById(int PrizeId)
         {
             PrizeModel prize;
             List<PrizeModel> prizes = _db.LoadFromTextFile<PrizeModel>(PrizesFileName);
@@ -51,6 +51,11 @@ namespace TrackerLibrary.DataAccess
             prize = prizes.Find(p => p.Id == PrizeId);
 
             return prize;
+        }
+
+        private List<PrizeModel> GetAllPrizes()
+        {
+            return _db.LoadFromTextFile<PrizeModel>(PrizesFileName);
         }
 
         public PersonModel CreatePerson(PersonModel model)
@@ -73,7 +78,7 @@ namespace TrackerLibrary.DataAccess
             return model;
         }
 
-        public PersonModel GetPersonById(int PersonId)
+        private PersonModel GetPersonById(int PersonId)
         {
             PersonModel person;
             List<PersonModel> people = GetAllPeople();
@@ -127,7 +132,12 @@ namespace TrackerLibrary.DataAccess
             return output;
         }
 
-        public TeamMember CreateTeamMember(TeamMember model)
+        private List<TeamModel> GetAllTeamsLite()
+        {
+            return _db.LoadFromTextFile<TeamModel>(TeamsFileName);
+        }
+
+        private TeamMember CreateTeamMember(TeamMember model)
         {
             List<TeamMember> teamMembers = GetAllTeamMembers();
 
@@ -147,12 +157,12 @@ namespace TrackerLibrary.DataAccess
             return model;
         }
 
-        public List<TeamMember> GetAllTeamMembers()
+        private List<TeamMember> GetAllTeamMembers()
         {
             return _db.LoadFromTextFile<TeamMember>(TeamMembersFileName);
         }
 
-        public TournamentPrizeModel CreateTournamentPrize(TournamentPrizeModel model)
+        private TournamentPrizeModel CreateTournamentPrize(TournamentPrizeModel model)
         {
             List<TournamentPrizeModel> tournamentPrizes = GetAllTournamentPrizes();
 
@@ -172,12 +182,12 @@ namespace TrackerLibrary.DataAccess
             return model;
         }
 
-        public List<TournamentPrizeModel> GetAllTournamentPrizes()
+        private List<TournamentPrizeModel> GetAllTournamentPrizes()
         {
             return _db.LoadFromTextFile<TournamentPrizeModel>(TournamentPrizesFileName);
         }
 
-        public TournamentEntryModel CreateTournamentEntry(TournamentEntryModel model)
+        private TournamentEntryModel CreateTournamentEntry(TournamentEntryModel model)
         {
             List<TournamentEntryModel> tournamentEntries = GetAllTournamentEntries();
 
@@ -197,12 +207,12 @@ namespace TrackerLibrary.DataAccess
             return model;
         }
 
-        public List<TournamentEntryModel> GetAllTournamentEntries()
+        private List<TournamentEntryModel> GetAllTournamentEntries()
         {
             return _db.LoadFromTextFile<TournamentEntryModel>(TournamentEntriesFileName);
         }
 
-        private MatchupEntryModel CreateMatchupEntry(MatchupEntryModel model)
+        private MatchupEntryModel CreateMatchupEntry(MatchupEntryModel model, int matchupId)
         {
             List<MatchupEntryModel> matchupEntries = GetAllMatchupEntries();
 
@@ -214,6 +224,7 @@ namespace TrackerLibrary.DataAccess
             }
 
             model.Id = currentId;
+            model.MatchupId = matchupId;
             model.ParentMatchupId = model.ParentMatchup != null ? model.ParentMatchup.Id : 0;
 
             matchupEntries.Add(model);
@@ -240,6 +251,7 @@ namespace TrackerLibrary.DataAccess
             }
 
             model.Id = currentId;
+            model.TournamentId = tournamentId;
 
             matchups.Add(model);
 
@@ -247,7 +259,7 @@ namespace TrackerLibrary.DataAccess
 
             foreach (var entry in model.Entries)
             {
-                CreateMatchupEntry(entry);
+                CreateMatchupEntry(entry, model.Id);
             }
 
             return model;
@@ -258,9 +270,30 @@ namespace TrackerLibrary.DataAccess
             return _db.LoadFromTextFile<MatchupModel>(MatchupsFileName);
         }
 
+        public void UpdateMatchup(MatchupModel model)
+        {
+            List<MatchupModel> matchups = GetAllMatchups();
+            List<MatchupEntryModel> matchupEntries = GetAllMatchupEntries();
+
+            MatchupModel matchup = matchups.Where(m => m.Id == model.Id).First();
+            matchups.Remove(matchup);
+            matchups.Add(model);
+
+            _db.SaveToTextFile(matchups.OrderBy(m => m.Id).ToList(), MatchupsFileName);
+
+            foreach (MatchupEntryModel entry in model.Entries)
+            {
+                MatchupEntryModel matchupEntry = matchupEntries.Where(m => m.Id == entry.Id).First();
+                matchupEntries.Remove(matchupEntry);
+                matchupEntries.Add(entry);
+            }
+
+            _db.SaveToTextFile(matchupEntries.OrderBy(m => m.Id).ToList(), MatchupEntriesFileName);
+        }
+
         public void CreateTournament(TournamentModel model)
         {
-            List<TournamentModel> tournaments = GetAllTournaments();
+            List<TournamentModel> tournaments = GetAllTournamentsLite();
 
             int currentId = 1;
 
@@ -294,9 +327,114 @@ namespace TrackerLibrary.DataAccess
             }
         }
 
-        public List<TournamentModel> GetAllTournaments()
+        private List<TournamentModel> GetAllTournamentsLite()
         {
             return _db.LoadFromTextFile<TournamentModel>(TournamentsFileName);
+        }
+
+        public List<TournamentModel> GetAllTournaments()
+        {
+            List<TournamentModel> output;
+
+            output = GetAllTournamentsLite();
+
+            foreach (TournamentModel tournament in output)
+            {
+                tournament.Prizes = GetAllPrizesByTournamentId(tournament.Id);
+                tournament.EnteredTeams = GetAllTeamsByTournamentId(tournament.Id);
+
+                List<MatchupModel> matchups = GetAllMatchupsByTournamentId(tournament.Id);
+
+                foreach (var matchup in matchups)
+                {
+                    matchup.Entries = GetAllMatchupEntriesByMatchupId(matchup.Id);
+
+                    List<TeamModel> teams = GetAllTeamsLite();
+
+                    if (matchup.WinnerId > 0)
+                    {
+                        matchup.Winner = teams.Where(x => x.Id == matchup.WinnerId).First();
+                    }
+
+                    foreach (var entry in matchup.Entries)
+                    {
+                        if (entry.TeamCompetingId > 0)
+                        {
+                            entry.TeamCompeting = teams.Where(x => x.Id == entry.TeamCompetingId).First();
+                        }
+
+                        if (entry.ParentMatchupId > 0)
+                        {
+                            entry.ParentMatchup = matchups.Where(x => x.Id == entry.ParentMatchupId).First();
+                        }
+                    }
+                }
+
+                List<MatchupModel> currRow = new List<MatchupModel>();
+                int currRound = 1;
+
+                foreach (MatchupModel matchupModel in matchups)
+                {
+                    if (matchupModel.MatchupRound > currRound)
+                    {
+                        tournament.Rounds.Add(currRow);
+                        currRow = new List<MatchupModel>();
+                        currRound++;
+                    }
+
+                    currRow.Add(matchupModel);
+                }
+
+                tournament.Rounds.Add(currRow);
+            }
+
+            return output;
+        }
+
+        private List<MatchupEntryModel> GetAllMatchupEntriesByMatchupId(int matchupId)
+        {
+            List<MatchupEntryModel> output = new List<MatchupEntryModel>();
+            List<MatchupEntryModel> matchupEntries = GetAllMatchupEntries();
+
+            output = matchupEntries.Where(me => me.MatchupId == matchupId).ToList();
+
+            return output;
+        }
+
+        private List<MatchupModel> GetAllMatchupsByTournamentId(int tournamentId)
+        {
+            List<MatchupModel> output = new List<MatchupModel>();
+            List<MatchupModel> matchups = GetAllMatchups();
+
+            output = matchups.Where(m => m.TournamentId == tournamentId).ToList();
+
+            return output;
+        }
+
+        private List<TeamModel> GetAllTeamsByTournamentId(int tournamentId)
+        {
+            List<TeamModel> output = new List<TeamModel>();
+
+            List<TournamentEntryModel> allTournamentEntries = GetAllTournamentEntries();
+            List<TeamModel> teams = GetAllTeams();
+
+            List<TournamentEntryModel> tournamentEntries = allTournamentEntries.Where(t => t.TournamentId == tournamentId).ToList();
+            output = teams.Join(tournamentEntries, t => t.Id, te => te.TeamId, (t, te) => t).ToList();
+
+            return output;
+        }
+
+        private List<PrizeModel> GetAllPrizesByTournamentId(int tournamentId)
+        {
+            List<PrizeModel> output = new List<PrizeModel>();
+
+            List<TournamentPrizeModel> allTournamentPrizes = GetAllTournamentPrizes();
+            List<PrizeModel> prizes = GetAllPrizes();
+
+            List<TournamentPrizeModel> tournamentPrizes = allTournamentPrizes.Where(tp => tp.TournamentId == tournamentId).ToList();
+            output = prizes.Join(tournamentPrizes, p => p.Id, tp => tp.PrizeId, (p, tp) => p).ToList();
+
+            return output;
         }
     }
 }

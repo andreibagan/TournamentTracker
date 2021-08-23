@@ -192,5 +192,21 @@ namespace TrackerLibrary.DataAccess
 
             return output;
         }
+
+        public void UpdateMatchup(MatchupModel model)
+        {
+            if (model.Winner != null)
+            {
+                _db.SaveData("dbo.spMatchups_Update", new { id = model.Id, WinnerId = model.Winner.Id }, connectionStringName, true);
+            }
+           
+            foreach (MatchupEntryModel entry in model.Entries)
+            {
+                if (entry.TeamCompeting != null)
+                {
+                    _db.SaveData("dbo.spMatchupEntries_Update", new { id = entry.Id, TeamCompetingId = entry.TeamCompeting.Id, Score = entry.Score }, connectionStringName, true); 
+                }
+            }
+        }   
     }
 }
