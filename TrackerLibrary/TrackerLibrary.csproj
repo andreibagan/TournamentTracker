@@ -69,6 +69,7 @@
     <Compile Include="DataAccess\ISqlDataAccess.cs" />
     <Compile Include="DataAccess\ITextFileDataAccess.cs" />
     <Compile Include="DataAccess\SqlDataAccess.cs" />
+    <Compile Include="EmailLogic.cs" />
     <Compile Include="Models\TournamentEntryModel.cs" />
     <Compile Include="Models\TournamentPrizeModel.cs" />
     <Compile Include="Enums.cs" />

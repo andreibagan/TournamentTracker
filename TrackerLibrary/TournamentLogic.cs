@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
-using TrackerLibrary.Models;
-using System.Linq;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
+using System.Linq;
+using System.Text;
 using TrackerLibrary;
+using TrackerLibrary.Models;
 
 namespace TournamentTracker
 {
@@ -24,6 +25,8 @@ namespace TournamentTracker
 
         public static void UpdateTournamentResults(TournamentModel tournament)
         {
+            int startingRound = tournament.CheckCurrentRound();
+
             List<MatchupModel> toScore = new List<MatchupModel>();
 
             foreach (List<MatchupModel> round in tournament.Rounds)
@@ -42,6 +45,79 @@ namespace TournamentTracker
             AdvanceWinners(toScore, tournament);
 
             toScore.ForEach(x => GlobalConfig.Connection.UpdateMatchup(x));
+            int endingRound = tournament.CheckCurrentRound();
+
+            if (endingRound > startingRound)
+            {
+                tournament.AlertUsersToNewRound();
+            }
+        }
+
+        public static void AlertUsersToNewRound(this TournamentModel tournament)
+        {
+            int currentRoundNumber = tournament.CheckCurrentRound();
+            List<MatchupModel> currentRound = tournament.Rounds.Where(x => x.First().MatchupRound == currentRoundNumber).First();
+
+            foreach (MatchupModel matchup in currentRound)
+            {
+                foreach (MatchupEntryModel matchupEntry in matchup.Entries)
+                {
+                    foreach (PersonModel person in matchupEntry.TeamCompeting.TeamMembers)
+                    {
+                        AlertPersonToNewRound(person, matchupEntry.TeamCompeting.TeamName, matchup.Entries.Where(x => x.TeamCompeting != matchupEntry.TeamCompeting).FirstOrDefault());
+                    }
+                }
+            }
+        }
+
+        private static void AlertPersonToNewRound(PersonModel person, string teamName, MatchupEntryModel competitor)
+        {
+            if (String.IsNullOrWhiteSpace(person.EmailAddress))
+            {
+                return;
+            }
+
+            string to = String.Empty;
+            string subject = String.Empty;
+            StringBuilder body = new StringBuilder();
+
+            if (competitor != null)
+            {
+                subject = $"You have a new matchup with {competitor.TeamCompeting.TeamName}.";
+
+                body.AppendLine("<h1>You have a new matchup</h1>");
+                body.Append("<string>Competitor: </strong>");
+                body.Append(competitor.TeamCompeting.TeamName);
+                body.AppendLine();
+                body.AppendLine();
+                body.AppendLine("Have a great time!");
+                body.AppendLine("~Tournament Tracker");
+            }
+            else
+            {
+                subject = "You have a bye week this round.";
+                body.AppendLine("Have a great time!");
+                body.AppendLine("~Tournament Tracker");
+            }
+
+            to = person.EmailAddress;
+
+            EmailLogic.SendEmail(to, subject, body.ToString());
+        }
+
+        private static int CheckCurrentRound(this TournamentModel tournament)
+        {
+            int output = 1;
+
+            foreach (List<MatchupModel> round in tournament.Rounds)
+            {
+                if (round.All(x => x.Winner != null))
+                {
+                    output++;
+                }
+            }
+
+            return output;
         }
 
         private static void AdvanceWinners(List<MatchupModel> toScore, TournamentModel tournament)
@@ -86,7 +162,7 @@ namespace TournamentTracker
                         GreaterScoreWin(matchup);
                         break;
                     default:
-                        throw new Exception("We do not allow ties in this application.");
+                        throw new ArgumentException("Invalid value in the File (App.config) key=greaterWins");
                 }
             }
         }
@@ -101,6 +177,10 @@ namespace TournamentTracker
             {
                 matchup.Winner = matchup.Entries[1].TeamCompeting;
             }
+            else
+            {
+                throw new Exception("We do not allow ties in this application.");
+            }
         }
 
         private static void LesserScoreWin(MatchupModel matchup)
@@ -112,6 +192,10 @@ namespace TournamentTracker
             else if (matchup.Entries[0].Score > matchup.Entries[1].Score)
             {
                 matchup.Winner = matchup.Entries[1].TeamCompeting;
+            }
+            else
+            {
+                throw new Exception("We do not allow ties in this application.");
             }
         }
 

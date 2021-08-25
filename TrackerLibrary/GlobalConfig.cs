@@ -41,5 +41,10 @@ namespace TrackerLibrary
         {
             return Path.Combine(ConfigurationManager.AppSettings["filePath"], fileName);
         }
+
+        public static string AppKeyLookup(string key)
+        {
+            return ConfigurationManager.AppSettings[key];
+        }
     }
 }
