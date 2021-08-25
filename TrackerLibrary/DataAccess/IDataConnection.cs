@@ -5,13 +5,12 @@ namespace TrackerLibrary.DataAccess
 {
     public interface IDataConnection
     {
-        PrizeModel CreatePrize(PrizeModel model);
+        void CreatePrize(PrizeModel model);
 
-        PersonModel CreatePerson(PersonModel model);
-
+        void CreatePerson(PersonModel model);
         List<PersonModel> GetAllPeople();
 
-        TeamModel CreateTeam(TeamModel model);
+        void CreateTeam(TeamModel model);
         List<TeamModel> GetAllTeams();
 
         void CreateTournament(TournamentModel model);

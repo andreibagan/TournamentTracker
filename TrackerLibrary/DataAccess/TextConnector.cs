@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using TournamentTracker;
 using TrackerLibrary.Models;
 
 namespace TrackerLibrary.DataAccess
@@ -8,24 +9,15 @@ namespace TrackerLibrary.DataAccess
     public class TextConnector : IDataConnection
     {
         private readonly ITextFileDataAccess _db;
-        private const string PrizesFileName = "PrizeModels.csv";
-        private const string PeopleFileName = "PersonModels.csv";
-        private const string TeamsFileName = "TeamModels.csv";
-        private const string TeamMembersFileName = "TeamMemberModels.csv";
-        private const string TournamentPrizesFileName = "TournamentPrizeModels.csv";
-        private const string TournamentEntriesFileName = "TournamentEntryModels.csv";
-        private const string TournamentsFileName = "TournamentModels.csv";
-        private const string MatchupsFileName = "MatchupModels.csv";
-        private const string MatchupEntriesFileName = "MatchupEntryModels.csv";
 
         public TextConnector(ITextFileDataAccess db)
         {
             _db = db;
         }
 
-        public PrizeModel CreatePrize(PrizeModel model)
+        public void CreatePrize(PrizeModel model)
         {
-            List<PrizeModel> prizes = _db.LoadFromTextFile<PrizeModel>(PrizesFileName);
+            List<PrizeModel> prizes = _db.LoadFromTextFile<PrizeModel>(GlobalConfig.PrizesFileName);
 
             int currentId = 1;
 
@@ -38,15 +30,13 @@ namespace TrackerLibrary.DataAccess
 
             prizes.Add(model);
 
-            _db.SaveToTextFile(prizes, PrizesFileName);
-
-            return model;
+            _db.SaveToTextFile(prizes, GlobalConfig.PrizesFileName);
         }
 
         private PrizeModel GetPrizeById(int PrizeId)
         {
             PrizeModel prize;
-            List<PrizeModel> prizes = _db.LoadFromTextFile<PrizeModel>(PrizesFileName);
+            List<PrizeModel> prizes = _db.LoadFromTextFile<PrizeModel>(GlobalConfig.PrizesFileName);
 
             prize = prizes.Find(p => p.Id == PrizeId);
 
@@ -55,10 +45,10 @@ namespace TrackerLibrary.DataAccess
 
         private List<PrizeModel> GetAllPrizes()
         {
-            return _db.LoadFromTextFile<PrizeModel>(PrizesFileName);
+            return _db.LoadFromTextFile<PrizeModel>(GlobalConfig.PrizesFileName);
         }
 
-        public PersonModel CreatePerson(PersonModel model)
+        public void CreatePerson(PersonModel model)
         {
             List<PersonModel> people = GetAllPeople();
 
@@ -73,9 +63,7 @@ namespace TrackerLibrary.DataAccess
 
             people.Add(model);
 
-            _db.SaveToTextFile(people, PeopleFileName);
-
-            return model;
+            _db.SaveToTextFile(people, GlobalConfig.PeopleFileName);
         }
 
         private PersonModel GetPersonById(int PersonId)
@@ -90,12 +78,12 @@ namespace TrackerLibrary.DataAccess
 
         public List<PersonModel> GetAllPeople()
         {
-            return _db.LoadFromTextFile<PersonModel>(PeopleFileName);
+            return _db.LoadFromTextFile<PersonModel>(GlobalConfig.PeopleFileName);
         }
 
-        public TeamModel CreateTeam(TeamModel model)
+        public void CreateTeam(TeamModel model)
         {
-            List<TeamModel> teams = _db.LoadFromTextFile<TeamModel>(TeamsFileName);
+            List<TeamModel> teams = _db.LoadFromTextFile<TeamModel>(GlobalConfig.TeamsFileName);
 
             int currentId = 1;
 
@@ -108,19 +96,17 @@ namespace TrackerLibrary.DataAccess
 
             teams.Add(model);
 
-            _db.SaveToTextFile(teams, TeamsFileName);
+            _db.SaveToTextFile(teams, GlobalConfig.TeamsFileName);
 
             foreach (var person in model.TeamMembers)
             {
                 CreateTeamMember(new TeamMember { TeamId = model.Id, PersonId = person.Id });
             }
-
-            return model;
         }
 
         public List<TeamModel> GetAllTeams()
         {
-            var output = _db.LoadFromTextFile<TeamModel>(TeamsFileName);
+            var output = _db.LoadFromTextFile<TeamModel>(GlobalConfig.TeamsFileName);
             var teamMembers = GetAllTeamMembers();
             var people = GetAllPeople();
 
@@ -134,10 +120,10 @@ namespace TrackerLibrary.DataAccess
 
         private List<TeamModel> GetAllTeamsLite()
         {
-            return _db.LoadFromTextFile<TeamModel>(TeamsFileName);
+            return _db.LoadFromTextFile<TeamModel>(GlobalConfig.TeamsFileName);
         }
 
-        private TeamMember CreateTeamMember(TeamMember model)
+        private void CreateTeamMember(TeamMember model)
         {
             List<TeamMember> teamMembers = GetAllTeamMembers();
 
@@ -152,17 +138,15 @@ namespace TrackerLibrary.DataAccess
 
             teamMembers.Add(model);
 
-            _db.SaveToTextFile(teamMembers, TeamMembersFileName);
-
-            return model;
+            _db.SaveToTextFile(teamMembers, GlobalConfig.TeamMembersFileName);
         }
 
         private List<TeamMember> GetAllTeamMembers()
         {
-            return _db.LoadFromTextFile<TeamMember>(TeamMembersFileName);
+            return _db.LoadFromTextFile<TeamMember>(GlobalConfig.TeamMembersFileName);
         }
 
-        private TournamentPrizeModel CreateTournamentPrize(TournamentPrizeModel model)
+        private void CreateTournamentPrize(TournamentPrizeModel model)
         {
             List<TournamentPrizeModel> tournamentPrizes = GetAllTournamentPrizes();
 
@@ -177,17 +161,15 @@ namespace TrackerLibrary.DataAccess
 
             tournamentPrizes.Add(model);
 
-            _db.SaveToTextFile(tournamentPrizes, TournamentPrizesFileName);
-
-            return model;
+            _db.SaveToTextFile(tournamentPrizes, GlobalConfig.TournamentPrizesFileName);
         }
 
         private List<TournamentPrizeModel> GetAllTournamentPrizes()
         {
-            return _db.LoadFromTextFile<TournamentPrizeModel>(TournamentPrizesFileName);
+            return _db.LoadFromTextFile<TournamentPrizeModel>(GlobalConfig.TournamentPrizesFileName);
         }
 
-        private TournamentEntryModel CreateTournamentEntry(TournamentEntryModel model)
+        private void CreateTournamentEntry(TournamentEntryModel model)
         {
             List<TournamentEntryModel> tournamentEntries = GetAllTournamentEntries();
 
@@ -202,17 +184,15 @@ namespace TrackerLibrary.DataAccess
 
             tournamentEntries.Add(model);
 
-            _db.SaveToTextFile(tournamentEntries, TournamentEntriesFileName);
-
-            return model;
+            _db.SaveToTextFile(tournamentEntries, GlobalConfig.TournamentEntriesFileName);
         }
 
         private List<TournamentEntryModel> GetAllTournamentEntries()
         {
-            return _db.LoadFromTextFile<TournamentEntryModel>(TournamentEntriesFileName);
+            return _db.LoadFromTextFile<TournamentEntryModel>(GlobalConfig.TournamentEntriesFileName);
         }
 
-        private MatchupEntryModel CreateMatchupEntry(MatchupEntryModel model, int matchupId)
+        private void CreateMatchupEntry(MatchupEntryModel model, int matchupId)
         {
             List<MatchupEntryModel> matchupEntries = GetAllMatchupEntries();
 
@@ -229,17 +209,15 @@ namespace TrackerLibrary.DataAccess
 
             matchupEntries.Add(model);
 
-            _db.SaveToTextFile(matchupEntries, MatchupEntriesFileName);
-
-            return model;
+            _db.SaveToTextFile(matchupEntries, GlobalConfig.MatchupEntriesFileName);
         }
 
         private List<MatchupEntryModel> GetAllMatchupEntries()
         {
-            return _db.LoadFromTextFile<MatchupEntryModel>(MatchupEntriesFileName);
+            return _db.LoadFromTextFile<MatchupEntryModel>(GlobalConfig.MatchupEntriesFileName);
         }
 
-        private MatchupModel CreateMatchup(MatchupModel model, int tournamentId)
+        private void CreateMatchup(MatchupModel model, int tournamentId)
         {
             List<MatchupModel> matchups = GetAllMatchups();
 
@@ -255,19 +233,17 @@ namespace TrackerLibrary.DataAccess
 
             matchups.Add(model);
 
-            _db.SaveToTextFile(matchups, MatchupsFileName);
+            _db.SaveToTextFile(matchups, GlobalConfig.MatchupsFileName);
 
             foreach (var entry in model.Entries)
             {
                 CreateMatchupEntry(entry, model.Id);
             }
-
-            return model;
         }
 
         private List<MatchupModel> GetAllMatchups()
         {
-            return _db.LoadFromTextFile<MatchupModel>(MatchupsFileName);
+            return _db.LoadFromTextFile<MatchupModel>(GlobalConfig.MatchupsFileName);
         }
 
         public void UpdateMatchup(MatchupModel model)
@@ -279,7 +255,7 @@ namespace TrackerLibrary.DataAccess
             matchups.Remove(matchup);
             matchups.Add(model);
 
-            _db.SaveToTextFile(matchups.OrderBy(m => m.Id).ToList(), MatchupsFileName);
+            _db.SaveToTextFile(matchups.OrderBy(m => m.Id).ToList(), GlobalConfig.MatchupsFileName);
 
             foreach (MatchupEntryModel entry in model.Entries)
             {
@@ -288,7 +264,7 @@ namespace TrackerLibrary.DataAccess
                 matchupEntries.Add(entry);
             }
 
-            _db.SaveToTextFile(matchupEntries.OrderBy(m => m.Id).ToList(), MatchupEntriesFileName);
+            _db.SaveToTextFile(matchupEntries.OrderBy(m => m.Id).ToList(), GlobalConfig.MatchupEntriesFileName);
         }
 
         public void CreateTournament(TournamentModel model)
@@ -306,7 +282,7 @@ namespace TrackerLibrary.DataAccess
 
             tournaments.Add(model);
 
-            _db.SaveToTextFile(tournaments, TournamentsFileName);
+            _db.SaveToTextFile(tournaments, GlobalConfig.TournamentsFileName);
 
             foreach (var prize in model.Prizes)
             {
@@ -325,11 +301,13 @@ namespace TrackerLibrary.DataAccess
                     CreateMatchup(match, model.Id);
                 }
             }
+
+            TournamentLogic.UpdateTournamentResults(model);
         }
 
         private List<TournamentModel> GetAllTournamentsLite()
         {
-            return _db.LoadFromTextFile<TournamentModel>(TournamentsFileName);
+            return _db.LoadFromTextFile<TournamentModel>(GlobalConfig.TournamentsFileName);
         }
 
         public List<TournamentModel> GetAllTournaments()

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using TournamentTracker;
 using TrackerLibrary.Models;
 
 namespace TrackerLibrary.DataAccess
@@ -20,10 +21,9 @@ namespace TrackerLibrary.DataAccess
         /// </summary>
         /// <param name="model">The prize information.</param>
         /// <returns>The prize information, including the unique identifier.</returns>
-        public PrizeModel CreatePrize(PrizeModel model)
+        public void CreatePrize(PrizeModel model)
         {
             model.Id = _db.LoadDate<int, dynamic>("dbo.spPrizes_Insert", new { model.PlaceNumber, model.PlaceName, model.PrizeAmount, model.PrizePercentage }, connectionStringName, true).First();
-            return model;
         }
 
         private PrizeModel GetPrizeById(int PrizeId)
@@ -31,10 +31,9 @@ namespace TrackerLibrary.DataAccess
             return _db.LoadDate<PrizeModel, dynamic>("dbo.spPrizes_GetById", new { PrizeId }, connectionStringName, true).First();
         }
 
-        public PersonModel CreatePerson(PersonModel model)
+        public void CreatePerson(PersonModel model)
         {
             model.Id = _db.LoadDate<int, dynamic>("dbo.spPeople_Insert", new { model.FirstName, model.LastName, model.EmailAddress, model.CellphoneNumber }, connectionStringName, true).First();
-            return model;
         }
 
         private PersonModel GetPersonById(int PersonId)
@@ -47,7 +46,7 @@ namespace TrackerLibrary.DataAccess
             return _db.LoadDate<PersonModel, dynamic>("dbo.spPeople_GetAll", new { }, connectionStringName, true);
         }
 
-        public TeamModel CreateTeam(TeamModel model)
+        public void CreateTeam(TeamModel model)
         {
             model.Id = _db.LoadDate<int, dynamic>("dbo.spTeams_Insert", new { model.TeamName }, connectionStringName, true).First();
 
@@ -55,8 +54,6 @@ namespace TrackerLibrary.DataAccess
             {
                 CreateTeamMember(new TeamMember { TeamId = model.Id, PersonId = person.Id });
             }
-
-            return model;
         }
 
         public List<TeamModel> GetAllTeams()
@@ -71,10 +68,9 @@ namespace TrackerLibrary.DataAccess
             return output;
         }
 
-        private TeamMember CreateTeamMember(TeamMember model)
+        private void CreateTeamMember(TeamMember model)
         {
             model.Id = _db.LoadDate<int, dynamic>("dbo.spTeamMembers_Insert", new { model.TeamId, model.PersonId }, connectionStringName, true).First();
-            return model;
         }
 
         private List<TeamMember> GetAllTeamMembers()
@@ -82,19 +78,17 @@ namespace TrackerLibrary.DataAccess
             return _db.LoadDate<TeamMember, dynamic>("dbo.spTeamMembers_GetAll", new { }, connectionStringName, true);
         }
 
-        private TournamentPrizeModel CreateTournamentPrize(TournamentPrizeModel model)
+        private void CreateTournamentPrize(TournamentPrizeModel model)
         {
             model.Id = _db.LoadDate<int, dynamic>("dbo.spTournamentPrizes_Insert", new { model.PrizeId, model.TournamentId }, connectionStringName, true).First();
-            return model;
         }
 
-        private TournamentEntryModel CreateTournamentEntry(TournamentEntryModel model)
+        private void CreateTournamentEntry(TournamentEntryModel model)
         {
             model.Id = _db.LoadDate<int, dynamic>("dbo.spTournamentEntries_Insert", new { model.TeamId, model.TournamentId }, connectionStringName, true).First();
-            return model;
         }
 
-        private MatchupModel CreateMatchup(MatchupModel model, int tournamentId)
+        private void CreateMatchup(MatchupModel model, int tournamentId)
         {
             model.Id = _db.LoadDate<int, dynamic>("dbo.spMatchups_Insert", new { model.MatchupRound, TournamentId = tournamentId }, connectionStringName, true).First();
 
@@ -102,8 +96,6 @@ namespace TrackerLibrary.DataAccess
             {
                 entry.Id = _db.LoadDate<int, dynamic>("dbo.spMatchupEntries_Insert", new { MatchupId = model.Id, ParentMatchupId = entry.ParentMatchup?.Id, TeamCompetingId = entry.TeamCompeting?.Id }, connectionStringName, true).First();
             }
-            
-            return model;
         }
 
         public void CreateTournament(TournamentModel model)
@@ -127,6 +119,8 @@ namespace TrackerLibrary.DataAccess
                     CreateMatchup(matchup, model.Id);
                 }
             }
+
+            TournamentLogic.UpdateTournamentResults(model);
         }
 
         public List<TournamentModel> GetAllTournaments()

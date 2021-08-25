@@ -46,9 +46,9 @@ namespace TrackerUI
                     CellphoneNumber = cellPhoneValue.Text
                 };
 
-                PersonModel person = GlobalConfig.Connection.CreatePerson(personModel);
+                GlobalConfig.Connection.CreatePerson(personModel);
 
-                selectedTeamMembers.Add(person); 
+                selectedTeamMembers.Add(personModel); 
 
                 WireUpLists();
                 ResetForm();

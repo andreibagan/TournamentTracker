@@ -2,6 +2,8 @@
 using TrackerLibrary.Models;
 using System.Linq;
 using System;
+using System.Configuration;
+using TrackerLibrary;
 
 namespace TournamentTracker
 {
@@ -16,12 +18,107 @@ namespace TournamentTracker
             tournament.Rounds.Add(CreateFirstRound(byes, randomizedTeams));
 
             CreateOtherRounds(tournament, rounds);
+
+            UpdateTournamentResults(tournament);
         }
 
-        private static void CreateOtherRounds(TournamentModel model, int rounds)
+        public static void UpdateTournamentResults(TournamentModel tournament)
+        {
+            List<MatchupModel> toScore = new List<MatchupModel>();
+
+            foreach (List<MatchupModel> round in tournament.Rounds)
+            {
+                foreach (MatchupModel rm in round)
+                {
+                    if (rm.Winner == null && (rm.Entries.Any(x => x.Score != 0) || rm.Entries.Count == 1))
+                    {
+                        toScore.Add(rm);
+                    }
+                }
+            }
+
+            MarkWinnerInMatchups(toScore);
+
+            AdvanceWinners(toScore, tournament);
+
+            toScore.ForEach(x => GlobalConfig.Connection.UpdateMatchup(x));
+        }
+
+        private static void AdvanceWinners(List<MatchupModel> toScore, TournamentModel tournament)
+        {
+            foreach (MatchupModel matchup in toScore)
+            {
+                foreach (List<MatchupModel> round in tournament.Rounds)
+                {
+                    foreach (MatchupModel rm in round)
+                    {
+                        foreach (MatchupEntryModel me in rm.Entries)
+                        {
+                            if (me.ParentMatchup?.Id == matchup.Id)
+                            {
+                                me.TeamCompeting = matchup.Winner;
+                                GlobalConfig.Connection.UpdateMatchup(rm);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void MarkWinnerInMatchups(List<MatchupModel> matchups)
+        {
+            string greaterWins = ConfigurationManager.AppSettings["greaterWins"];
+
+            foreach (MatchupModel matchup in matchups)
+            {
+                if (matchup.Entries.Count == 1)
+                {
+                    matchup.Winner = matchup.Entries[0].TeamCompeting;
+                    continue;
+                }
+
+                switch (greaterWins)
+                {
+                    case "0":
+                        LesserScoreWin(matchup);
+                        break;
+                    case "1":
+                        GreaterScoreWin(matchup);
+                        break;
+                    default:
+                        throw new Exception("We do not allow ties in this application.");
+                }
+            }
+        }
+
+        private static void GreaterScoreWin(MatchupModel matchup)
+        {
+            if (matchup.Entries[0].Score > matchup.Entries[1].Score)
+            {
+                matchup.Winner = matchup.Entries[0].TeamCompeting;
+            }
+            else if (matchup.Entries[0].Score < matchup.Entries[1].Score)
+            {
+                matchup.Winner = matchup.Entries[1].TeamCompeting;
+            }
+        }
+
+        private static void LesserScoreWin(MatchupModel matchup)
+        {
+            if (matchup.Entries[0].Score < matchup.Entries[1].Score)
+            {
+                matchup.Winner = matchup.Entries[0].TeamCompeting;
+            }
+            else if (matchup.Entries[0].Score > matchup.Entries[1].Score)
+            {
+                matchup.Winner = matchup.Entries[1].TeamCompeting;
+            }
+        }
+
+        private static void CreateOtherRounds(TournamentModel tournament, int rounds)
         {
             int round = 2;
-            List<MatchupModel> previousRound = model.Rounds.First();
+            List<MatchupModel> previousRound = tournament.Rounds.First();
             List<MatchupModel> currRound = new List<MatchupModel>();
             MatchupModel currMatchup = new MatchupModel();
 
@@ -39,7 +136,7 @@ namespace TournamentTracker
                     }
                 }
 
-                model.Rounds.Add(currRound);
+                tournament.Rounds.Add(currRound);
                 previousRound = currRound;
 
                 currRound = new List<MatchupModel>();
