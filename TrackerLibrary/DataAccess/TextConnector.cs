@@ -414,5 +414,34 @@ namespace TrackerLibrary.DataAccess
 
             return output;
         }
+
+        public void CompleteTournament(TournamentModel model)
+        {
+            List<TournamentModel> tournaments = GetAllTournamentsLite();
+
+            tournaments.Remove(model);
+
+            _db.SaveToTextFile(tournaments, GlobalConfig.TournamentsFileName);
+
+            foreach (var prize in model.Prizes)
+            {
+                CreateTournamentPrize(new TournamentPrizeModel { PrizeId = prize.Id, TournamentId = model.Id });
+            }
+
+            foreach (var team in model.EnteredTeams)
+            {
+                CreateTournamentEntry(new TournamentEntryModel { TeamId = team.Id, TournamentId = model.Id });
+            }
+
+            foreach (var round in model.Rounds)
+            {
+                foreach (var match in round)
+                {
+                    CreateMatchup(match, model.Id);
+                }
+            }
+
+            TournamentLogic.UpdateTournamentResults(model);
+        }
     }
 }

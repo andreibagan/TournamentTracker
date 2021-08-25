@@ -201,6 +201,11 @@ namespace TrackerLibrary.DataAccess
                     _db.SaveData("dbo.spMatchupEntries_Update", new { id = entry.Id, TeamCompetingId = entry.TeamCompeting.Id, Score = entry.Score }, connectionStringName, true); 
                 }
             }
-        }   
+        }
+
+        public void CompleteTournament(TournamentModel model)
+        {
+            _db.SaveData("dbo.spTournaments_Complete", new { id = model.Id }, connectionStringName, true);
+        }
     }
 }

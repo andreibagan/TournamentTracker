@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using TournamentTracker.Attributes;
 
 namespace TrackerLibrary.Models
@@ -8,6 +9,8 @@ namespace TrackerLibrary.Models
     /// </summary>
     public class TournamentModel
     {
+        public event EventHandler<DateTime> OntournamentComplete;
+
         /// <summary>
         /// The unique identifier for the tournament.
         /// </summary>
@@ -39,5 +42,10 @@ namespace TrackerLibrary.Models
         /// </summary>
         [RemoveProperty]
         public List<List<MatchupModel>> Rounds { get; set; } = new List<List<MatchupModel>>();
+
+        public void CompleteTournament()
+        {
+            OntournamentComplete?.Invoke(this, DateTime.Now);
+        }
     }
 }

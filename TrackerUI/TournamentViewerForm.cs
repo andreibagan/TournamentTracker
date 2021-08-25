@@ -21,10 +21,17 @@ namespace TrackerUI
 
             _tournament = tournament;
 
+            _tournament.OntournamentComplete += _tournament_OntournamentComplete;
+
             WireUpLists();
 
             LoadFormData();
             LoadRounds();
+        }
+
+        private void _tournament_OntournamentComplete(object sender, DateTime e)
+        {
+            this.Close();
         }
 
         private void WireUpLists()
