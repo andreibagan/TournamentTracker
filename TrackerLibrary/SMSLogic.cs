@@ -1,0 +1,30 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TrackerLibrary;
+using Twilio;
+using Twilio.Rest.Api.V2010.Account;
+using Twilio.Types;
+
+namespace TournamentTracker
+{
+    public class SMSLogic
+    {
+        public static void SendSMSMessage(string to, string textMessage)
+        {
+            string accountSid = GlobalConfig.AppKeyLookup("smsAccountSid");
+            string authToken = GlobalConfig.AppKeyLookup("smsAuthToken");
+            string fromPhoneNumber = GlobalConfig.AppKeyLookup("smsFromPhoneNumber");
+
+            TwilioClient.Init(accountSid, authToken);
+
+            var message = MessageResource.Create(
+                to: new PhoneNumber(to),
+                from: new PhoneNumber(fromPhoneNumber),
+                body: textMessage
+                );
+        }
+    }
+}

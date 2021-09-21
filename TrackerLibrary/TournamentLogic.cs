@@ -72,37 +72,40 @@ namespace TournamentTracker
 
         private static void AlertPersonToNewRound(PersonModel person, string teamName, MatchupEntryModel competitor)
         {
-            if (String.IsNullOrWhiteSpace(person.EmailAddress))
+            if (!String.IsNullOrWhiteSpace(person.EmailAddress))
             {
-                return;
+                string to = String.Empty;
+                string subject = String.Empty;
+                StringBuilder body = new StringBuilder();
+
+                if (competitor != null)
+                {
+                    subject = $"You have a new matchup with {competitor.TeamCompeting.TeamName}.";
+
+                    body.AppendLine("<h1>You have a new matchup</h1>");
+                    body.Append("<string>Competitor: </strong>");
+                    body.Append(competitor.TeamCompeting.TeamName);
+                    body.AppendLine();
+                    body.AppendLine();
+                    body.AppendLine("Have a great time!");
+                    body.AppendLine("~Tournament Tracker");
+                }
+                else
+                {
+                    subject = "You have a bye week this round.";
+                    body.AppendLine("Have a great time!");
+                    body.AppendLine("~Tournament Tracker");
+                }
+
+                to = person.EmailAddress;
+
+                EmailLogic.SendEmail(to, subject, body.ToString());
             }
 
-            string to = String.Empty;
-            string subject = String.Empty;
-            StringBuilder body = new StringBuilder();
-
-            if (competitor != null)
+            if (!String.IsNullOrWhiteSpace(person.CellphoneNumber))
             {
-                subject = $"You have a new matchup with {competitor.TeamCompeting.TeamName}.";
-
-                body.AppendLine("<h1>You have a new matchup</h1>");
-                body.Append("<string>Competitor: </strong>");
-                body.Append(competitor.TeamCompeting.TeamName);
-                body.AppendLine();
-                body.AppendLine();
-                body.AppendLine("Have a great time!");
-                body.AppendLine("~Tournament Tracker");
+                SMSLogic.SendSMSMessage(person.CellphoneNumber, $"You have a new matchup with {competitor.TeamCompeting.TeamName}."); 
             }
-            else
-            {
-                subject = "You have a bye week this round.";
-                body.AppendLine("Have a great time!");
-                body.AppendLine("~Tournament Tracker");
-            }
-
-            to = person.EmailAddress;
-
-            EmailLogic.SendEmail(to, subject, body.ToString());
         }
 
         private static int CheckCurrentRound(this TournamentModel tournament)
