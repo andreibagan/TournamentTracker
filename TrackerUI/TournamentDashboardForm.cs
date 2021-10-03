@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Windows.Forms;
 using TrackerLibrary;
 using TrackerLibrary.Models;
@@ -14,6 +15,8 @@ namespace TrackerUI
             InitializeComponent();
 
             WireUpLists();
+
+            headerLabel.Text = Directory.GetCurrentDirectory();
         }
 
         private void WireUpLists()

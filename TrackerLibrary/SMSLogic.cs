@@ -23,8 +23,7 @@ namespace TournamentTracker
             var message = MessageResource.Create(
                 to: new PhoneNumber(to),
                 from: new PhoneNumber(fromPhoneNumber),
-                body: textMessage
-                );
+                body: textMessage);
         }
     }
 }
