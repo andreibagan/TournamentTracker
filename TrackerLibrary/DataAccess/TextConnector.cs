@@ -43,7 +43,7 @@ namespace TrackerLibrary.DataAccess
             return prize;
         }
 
-        private List<PrizeModel> GetAllPrizes()
+        public List<PrizeModel> GetAllPrizes()
         {
             return _db.LoadFromTextFile<PrizeModel>(GlobalConfig.PrizesFileName);
         }

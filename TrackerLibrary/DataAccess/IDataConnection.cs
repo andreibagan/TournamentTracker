@@ -6,6 +6,7 @@ namespace TrackerLibrary.DataAccess
     public interface IDataConnection
     {
         void CreatePrize(PrizeModel model);
+        List<PrizeModel> GetAllPrizes();
 
         void CreatePerson(PersonModel model);
         List<PersonModel> GetAllPeople();

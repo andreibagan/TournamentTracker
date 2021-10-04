@@ -207,5 +207,10 @@ namespace TrackerLibrary.DataAccess
         {
             _db.SaveData("dbo.spTournaments_Complete", new { id = model.Id }, connectionStringName, true);
         }
+
+        public List<PrizeModel> GetAllPrizes()
+        {
+            return _db.LoadDate<PrizeModel, dynamic>("dbo.spPrizes_GetAll", new { }, connectionStringName, true);
+        }
     }
 }
