@@ -16,14 +16,16 @@ namespace MVCUI.Controllers
 
         public ActionResult Create()
         {
-            TeamMVCModel input = new TeamMVCModel();
             var people = GlobalConfig.Connection.GetAllPeople();
 
-            input.TeamMembers = people.Select(p => new SelectListItem()
+            TeamMVCModel input = new TeamMVCModel()
             {
-                Text = p.FullName,
-                Value = p.Id.ToString()
-            }).ToList();
+                TeamMembers = people.Select(p => new SelectListItem()
+                {
+                    Value = p.Id.ToString(),
+                    Text = p.FullName
+                }).ToList()
+            };
 
             return View(input);
         }
